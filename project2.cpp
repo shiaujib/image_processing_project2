@@ -26,6 +26,17 @@ void powerLawTrans(float gamma){    //RGB type is uchar
 	imshow("result",matDst);
 	waitKey(0);
 }
+void logTrans(float grayLevel){
+	for(int i=0;i<matDst.cols;i++)
+		for(int j=0;j<matDst.rows;j++){
+			matDst.at<uchar>(j,i)=(int)255*log(matSrc.at<uchar>(j,i)/255.0+grayLevel);
+			}
+	//cv::pow(matSrc,gamma,matDst);
+	imshow("result",matDst);
+	waitKey(0);
+	
+
+}
 
 
 int main(){
@@ -34,7 +45,8 @@ int main(){
 	cout<<"input gamma value : ";
 	cin>>gamma;
 	init("Fig0343(a)(skeleton_orig).tif");
-	powerLawTrans(gamma);
+	//powerLawTrans(gamma);
+	logTrans(5);
 
 
 
