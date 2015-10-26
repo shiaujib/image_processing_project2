@@ -26,6 +26,17 @@ void powerLawTrans(float gamma){    //RGB type is uchar
 	imshow("result",matDst);
 	waitKey(0);
 }
+void logTrans(float grayLevel){
+	for(int i=0;i<matDst.cols;i++)
+		for(int j=0;j<matDst.rows;j++){
+			matDst.at<uchar>(j,i)=(int)255*log(matSrc.at<uchar>(j,i)/255.0+grayLevel);
+			}
+	//cv::pow(matSrc,gamma,matDst);
+	imshow("result",matDst);
+	waitKey(0);
+	
+
+}
 
 void histogram(){
 	int total,max=0;
@@ -64,12 +75,20 @@ void histogram(){
 int main(){
 	float gamma;
 //	init("Fig0343(a)(skeleton_orig).tif");
+<<<<<<< HEAD
 //	cout<<"input gamma value : ";
 //	cin>>gamma;
 //	init("Fig0343(a)(skeleton_orig).tif");
 	init("lena.jpg");
 	//powerLawTrans(gamma);
 	histogram();
+=======
+	cout<<"input gamma value : ";
+	cin>>gamma;
+	init("Fig0343(a)(skeleton_orig).tif");
+	//powerLawTrans(gamma);
+	logTrans(5);
+>>>>>>> baf926e3376183a351943f9c6d7e0b7e6d30036d
 
 
 
