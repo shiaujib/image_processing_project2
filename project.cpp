@@ -46,19 +46,24 @@ void histogram_equ(int hisarray[],int total){
 	for(int i=0;i<256;i++){     //claculate probability
 		pr[i]=(double)hisarray[i]/total;
 		temp+=pr[i];
-		s[i]=cvFloor(temp*255); //(L-1)*pr
+		s[i]=cvRound(temp*255); //(L-1)*pr
 		cout<<s[i]<<endl;
 		//cout<<hisarray[i]<<endl;
 		ps[s[i]]+=pr[i];
 
 	}
-/*	for(int i=0;i<matSrc.cols;i++)
+	for(int i=0;i<matSrc.cols;i++)
 		for(int j=0;j<matSrc.rows;j++){
-			value=(int)matSrc.at<uchar>(j,i)
-			for(int k=0;k<256;k++){
-				if(value==s[i])
-					(int)matSrc.at<uchar>(j,i)
-	*/
+			value=(int)matSrc.at<uchar>(j,i);
+			value=s[value];
+			matDst.at<uchar>(j,i)=value;
+			}
+	imshow("histogram equalize",matDst);
+	waitKey(0);
+			//for(int k=0;k<256;k++){
+			//	if(value==s[i])
+			
+	
 				
 			
 }
@@ -107,7 +112,7 @@ int main(){
 //	cout<<"input gamma value : ";
 //	cin>>gamma;
 //	init("Fig0343(a)(skeleton_orig).tif");
-	init("lena.jpg");
+	init("20150802_9054.jpg");
 	//powerLawTrans(gamma);
 	histogram();
 //	cout<<"input gamma value : ";
