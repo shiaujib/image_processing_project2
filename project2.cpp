@@ -37,30 +37,56 @@ void logTrans(float grayLevel){
 	
 
 }
+void histogram_equ(int hisarray[],int total){
+	double pr[256]={0.0};
+	double ps[256]={0.0};
+	double temp;
+	int s[256]={0};
+	int value;
+	for(int i=0;i<256;i++){     //claculate probability
+		pr[i]=(double)hisarray[i]/total;
+		temp+=pr[i];
+		s[i]=cvFloor(temp*255); //(L-1)*pr
+		cout<<s[i]<<endl;
+		//cout<<hisarray[i]<<endl;
+		ps[s[i]]+=pr[i];
 
+	}
+/*	for(int i=0;i<matSrc.cols;i++)
+		for(int j=0;j<matSrc.rows;j++){
+			value=(int)matSrc.at<uchar>(j,i)
+			for(int k=0;k<256;k++){
+				if(value==s[i])
+					(int)matSrc.at<uchar>(j,i)
+	*/
+				
+			
+}
 void histogram(){
-	int total,max=0;
+	int total=0,max=0;
 	int hisarray[256]={0};
 	Mat figure=Mat(Size(400,300),CV_8UC3);
 	
 	for(int i=0;i<matSrc.cols;i++)
 		for(int j=0;j<matSrc.rows;j++){
-			total+=(int)matSrc.at<uchar>(j,i);
+			total++;
 			hisarray[(int)matSrc.at<uchar>(j,i)]++;
 			
+			
 			}
+	
 	
 	for(int i=0;i<256;i++){
 		if(hisarray[i]>max)
 			max=hisarray[i];
-		cout<<hisarray[i]<<endl;
+//		cout<<hisarray[i]<<endl;
 		}
 	cout<<"max "<<max<<endl;
 	int intensity;
 	int scale=2;
 	double bwidth=(double)figure.cols/256;
 	double bheight=(double)figure.rows/max;
-	cout<<"   bbb"<<bwidth<<endl;
+//	cout<<"   bbb"<<bwidth<<endl;
 	for(int i=0;i<256;i++){
 //		intensity=100*cvRound(hisarray[i]*255/max);
 	//	rectangle(figure,Point(i*scale,255),Point((i+1)*scale,255-intensity),  CV_RGB(255,255,255));
@@ -68,27 +94,27 @@ void histogram(){
 		
 		}
 	imshow("graph",figure);
-	waitKey(0);	
-}	
+	waitKey(0);
+	histogram_equ(hisarray,total);	
+}
+
+	
 
 
 int main(){
 	float gamma;
 //	init("Fig0343(a)(skeleton_orig).tif");
-<<<<<<< HEAD
 //	cout<<"input gamma value : ";
 //	cin>>gamma;
 //	init("Fig0343(a)(skeleton_orig).tif");
 	init("lena.jpg");
 	//powerLawTrans(gamma);
 	histogram();
-=======
-	cout<<"input gamma value : ";
-	cin>>gamma;
-	init("Fig0343(a)(skeleton_orig).tif");
+//	cout<<"input gamma value : ";
+//	cin>>gamma;
+//	init("Fig0343(a)(skeleton_orig).tif");
 	//powerLawTrans(gamma);
-	logTrans(5);
->>>>>>> baf926e3376183a351943f9c6d7e0b7e6d30036d
+//	logTrans(5);
 
 
 
