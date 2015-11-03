@@ -37,6 +37,31 @@ void logTrans(float grayLevel){
 	
 
 }
+
+void smoothing_filt(int n){
+	int sum=0;
+	n=sqrt(n);
+	for(int i=0;i<matDst.cols;i++)
+		for(int j=0;j<matDst.rows;j++){
+			//if(i){
+			for(int k=i-1;k<i+n-1;k++)
+				for(int z=j-1;z<j+n-1;z++){
+					sum+=matDst.at<uchar>(z,k);
+				}
+			//}
+			cout<<sum<<endl;
+			matDst.at<uchar>(j,i)=sum/(n*n);
+			sum=0;
+		}
+	imshow("Result",matDst);
+	waitKey(0);
+
+}	
+			
+
+
+
+
 void histogram_equ(int hisarray[],int total){
 	double pr[256]={0.0};
 	double ps[256]={0.0};
@@ -112,9 +137,10 @@ int main(){
 //	cout<<"input gamma value : ";
 //	cin>>gamma;
 //	init("Fig0343(a)(skeleton_orig).tif");
-	init("20150802_9054.jpg");
-	//powerLawTrans(gamma);
-	histogram();
+	init("Fig0316(3)(third_from_top).tif");
+	powerLawTrans(2);
+//	histogram();
+	smoothing_filt(25);
 //	cout<<"input gamma value : ";
 //	cin>>gamma;
 //	init("Fig0343(a)(skeleton_orig).tif");
