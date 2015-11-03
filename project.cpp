@@ -49,7 +49,6 @@ void smoothing_filt(int n){
 					sum+=matDst.at<uchar>(z,k);
 				}
 			//}
-			cout<<sum<<endl;
 			matDst.at<uchar>(j,i)=sum/(n*n);
 			sum=0;
 		}
@@ -58,7 +57,71 @@ void smoothing_filt(int n){
 
 }	
 			
+void laplace(){
+	int value;
+	int sum=0;
+	for(int i=0;i<matDst.cols;i++)
+		for(int j=0;j<matDst.rows;j++){
+			value=matDst.at<uchar>(j,i+1)+matDst.at<uchar>(j,i-1)+matDst.at<uchar>(j+1,i)+matDst.at<uchar>(j-1,i)-4*matDst.at<uchar>(j,i);
+			matDst.at<uchar>(j,i)*=-1;
+			cout<<value<<endl;
+			//matDst.at<uchar>(j,i)=matDst.at<uchar>(j,i)+(matDst.at<uchar>(j,i+1)+matDst.at<uchar>(j,i-1)+matDst.at<uchar>(j+1,i)+matDst.at<uchar>(j-1,i)-4*matDst.at<uchar>(j,i));
+			if(value>0)
+				matDst.at<uchar>(j,i)=matDst.at<uchar>(j,i)+value;
+			else
+				matDst.at<uchar>(j,i)=matDst.at<uchar>(j,i)-value;
+		  }	
+		/*	if(i==0&&j){
+				sum-=matDst.at<uchar>(j-1,i);
+				sum-=matDst.at<uchar>(j-1,i+1);
+				sum-=matDst.at<uchar>(j,i+1);
+				sum+=8*matDst.at<uchar>(j,i);
+				sum-=matDst.at<uchar>(j+1,i);
+				sum-=matDst.at<uchar>(j+1,i+1);
+				matDst.at<uchar>(j,i)=sum/6;
+				sum=0;
+			}
+			else if(i&&j==0){
+				sum-=matDst.at<uchar>(j,i-1);
+				sum+=8*matDst.at<uchar>(j,i);
+				sum-=matDst.at<uchar>(j,i+1);
+				sum-=matDst.at<uchar>(j+1,i-1);
+				sum-=matDst.at<uchar>(j+1,i);
+				sum-=matDst.at<uchar>(j+1,i+1);
+				matDst.at<uchar>(j,i)=sum/6;
+				sum=0;
+			}
+			else if(i==0&&j==0){
+				sum-=matDst.at<uchar>(j+1,i);
+				sum+=8*matDst.at<uchar>(j,i);
+				sum-=matDst.at<uchar>(j,i+1);
+				sum-=matDst.at<uchar>(j+1,i+1);
+				matDst.at<uchar>(j,i)=sum/4;
+				sum=0;
+			}
+				
+			
+			else{	*/
+		/*	for(int k=i-1;k<i+2;k++)
+				for(int z=j-1;z<j+2;z++){
+					if(z==j&&k==i)
+						sum+=8*matDst.at<uchar>(z,k);
 
+					else{
+						sum-=matDst.at<uchar>(z,k);
+						
+					}
+				
+				}
+			
+			matDst.at<uchar>(j,i)=sum/9;
+			sum=0;
+				
+		}*/
+	imshow("Result",matDst);
+	waitKey(0);
+}	
+			
 
 
 
@@ -137,10 +200,11 @@ int main(){
 //	cout<<"input gamma value : ";
 //	cin>>gamma;
 //	init("Fig0343(a)(skeleton_orig).tif");
-	init("Fig0316(3)(third_from_top).tif");
-	powerLawTrans(2);
+	init("Fig0343(a)(skeleton_orig).tif");
+	powerLawTrans(1);
 //	histogram();
-	smoothing_filt(25);
+//	smoothing_filt(25);
+	laplace();
 //	cout<<"input gamma value : ";
 //	cin>>gamma;
 //	init("Fig0343(a)(skeleton_orig).tif");
