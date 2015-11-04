@@ -6,12 +6,14 @@
 using namespace std;
 using namespace cv;
 
-Mat matSrc,matDst;
+Mat matSrc,matDst,matLs,matadd;
 
 
 void init(String str){
 	matSrc=imread(str,0);
 	matDst=Mat(matSrc.size(),CV_8UC1);
+	matLs=Mat(matSrc.size(),0);
+	matadd=Mat(matadd.size(),CV_8UC1);
 	imshow("input",matSrc);
 	waitKey(0);
 	
@@ -58,58 +60,17 @@ void smoothing_filt(int n){
 }	
 			
 void laplace(){
-	int value;
+	int value=0;
 	int sum=0;
-	for(int i=0;i<matDst.cols;i++)
-		for(int j=0;j<matDst.rows;j++){
-		/*	value=matSrc.at<uchar>(j,i+1)+matSrc.at<uchar>(j,i-1)+matSrc.at<uchar>(j+1,i)+matSrc.at<uchar>(j-1,i)-4*matSrc.at<uchar>(j,i);
-			if(value>0)
-				matDst.at<uchar>(j,i)=matSrc.at<uchar>(j,i)+value;
-			else if(value<0)
-				matDst.at<uchar>(j,i)=matSrc.at<uchar>(j,i)-value;
-		  	*/
-		/*	if(i==0&&j){
-				sum+=8*(int)matDst.at<uchar>(j,i);
-				sum-=(int)matDst.at<uchar>(j-1,i);
-				sum-=(int)matDst.at<uchar>(j-1,i+1);
-				sum-=(int)matDst.at<uchar>(j+1,i);
-				sum-=(int)matDst.at<uchar>(j+1,i);
-				sum-=(int)matDst.at<uchar>(j+1,i+1);
-				matDst.at<uchar>(j,i)=sum/6;
-				sum=0;
+	for(int i=-1;i<matDst.cols;i++)
+		for(int j=-1;j<matDst.rows;j++){
 
 
-
-			}
-			if(i&&j==0){
-				sum+=8*(int)matDst.at<uchar>(j,i);
-				sum-=(int)matDst.at<uchar>(j,i-1);
-				sum-=(int)matDst.at<uchar>(j,i+1);
-				sum-=(int)matDst.at<uchar>(j+1,i-1);
-				sum-=(int)matDst.at<uchar>(j+1,i);
-				sum-=(int)matDst.at<uchar>(j+1,i+1);
-				matDst.at<uchar>(j,i)=sum/6;
-				sum=0;
-
-			}
-			if(i==0&&j==0){
-				sum+=8*(int)matDst.at<uchar>(j,i);
-				sum-=(int)matDst.at<uchar>(j,i+1);
-				sum-=(int)matDst.at<uchar>(j+1,i);
-				sum-=(int)matDst.at<uchar>(j+1,i+1);
-				matDst.at<uchar>(j,i)=sum/4;
-				sum=0;
-				
-			}*/
-
-
-
-
-			for(int k=i-1;k<i+2;k++)
-				for(int z=j-1;z<j+2;z++){
+			for(int k=i-2;k<i+2;k++)
+				for(int z=j-2;z<j+2;z++){
 					
 					if(z==j&&k==i)
-						sum+=7*matDst.at<uchar>(z,k);
+						sum+=8*matDst.at<uchar>(z,k);
 
 					else
 						sum-=matDst.at<uchar>(z,k);
@@ -117,30 +78,60 @@ void laplace(){
 					
 				
 				}
+			/*if(sum>255)
+				sum=255;
+			else if(sum<0)
+				sum=0;*/
 			matDst.at<uchar>(j,i)=sum/9;
 			sum=0;
-			//cout<<(int)matDst.at<uchar>(-100,-100)<<endl;
-			/*sum+=8*(int)matDst.at<uchar>(j,i);
-			sum-=(int)matDst.at<uchar>(j-1,i-1);
-			sum-=(int)matDst.at<uchar>(j-1,i);
-			sum-=(int)matDst.at<uchar>(j-1,i+1);
-			sum-=(int)matDst.at<uchar>(j,i-1);
-			sum-=(int)matDst.at<uchar>(j,i+1);
-			sum-=(int)matDst.at<uchar>(j+1,i-1);
-			sum-=(int)matDst.at<uchar>(j+1,i);
-			sum-=(int)matDst.at<uchar>(j+1,i+1);
-			//if(sum>0)
-			//	sum=-100000000;
-
-			matDst.at<uchar>(j,i)=sum/9;
-			sum=0;*/
 				
 		}
 	imshow("Result",matDst);
 	waitKey(0);
-}	
+}
+
+void add_sharpening(){
+	for(int i=0;i<matDst.cols;i++)
+		for(int j=0;j<matDst.rows;j++){
+			matadd.at<uchar>(j,i)=matLs.at<uchar>(j,i)+matDst.at<uchar>(j,i);
+		}
+	imshow("add result",matadd);
+	waitKey(0);
+}
+			
+	
 			
 
+void laplace_sharpening(){
+	int value=0;
+	int sum=0;
+	int result1,result2;
+	for(int i=0;i<matDst.cols;i++)
+		for(int j=0;j<matDst.rows;j++){
+			value=matSrc.at<uchar>(j,i+1)+matSrc.at<uchar>(j,i-1)+matSrc.at<uchar>(j+1,i)+matSrc.at<uchar>(j-1,i)-4*matSrc.at<uchar>(j,i);
+			if(value>0){
+				result1=matSrc.at<uchar>(j,i)+value;
+				if(result1>255)
+					result1=255;
+				if(result1<0)
+					result1=0;
+
+				matLs.at<uchar>(j,i)=result1;
+			}
+			else if(value<0){
+				result2=matSrc.at<uchar>(j,i)-value;
+				if(result2>255)
+					result2=255;
+				if(result2<0)
+					result2=0;
+
+				matLs.at<uchar>(j,i)=result2;
+			}
+		}
+	imshow("laplace sharp",matLs);
+	waitKey(0);
+
+}
 
 
 void histogram_equ(int hisarray[],int total){
@@ -224,6 +215,8 @@ int main(){
 //	histogram();
 //	smoothing_filt(25);
 	laplace();
+	laplace_sharpening();
+//	add_sharpening();
 //	cout<<"input gamma value : ";
 //	cin>>gamma;
 //	init("Fig0343(a)(skeleton_orig).tif");
