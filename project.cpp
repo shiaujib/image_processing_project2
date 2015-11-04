@@ -109,24 +109,13 @@ void laplace_sharpening(){
 	for(int i=0;i<matDst.cols;i++)
 		for(int j=0;j<matDst.rows;j++){
 			value=matSrc.at<uchar>(j,i+1)+matSrc.at<uchar>(j,i-1)+matSrc.at<uchar>(j+1,i)+matSrc.at<uchar>(j-1,i)-4*matSrc.at<uchar>(j,i);
-			if(value>0){
-				result1=matSrc.at<uchar>(j,i)+value;
-				if(result1>255)
-					result1=255;
-				if(result1<0)
-					result1=0;
+			result1=matSrc.at<uchar>(j,i)-value;
+			if(result1>255)
+				result1=255;
+			else if(result1<0)
+				result1=0;
 
-				matLs.at<uchar>(j,i)=result1;
-			}
-			else if(value<0){
-				result2=matSrc.at<uchar>(j,i)-value;
-				if(result2>255)
-					result2=255;
-				if(result2<0)
-					result2=0;
-
-				matLs.at<uchar>(j,i)=result2;
-			}
+			matLs.at<uchar>(j,i)=result1;
 		}
 	imshow("laplace sharp",matLs);
 	waitKey(0);
