@@ -62,62 +62,80 @@ void laplace(){
 	int sum=0;
 	for(int i=0;i<matDst.cols;i++)
 		for(int j=0;j<matDst.rows;j++){
-			value=matDst.at<uchar>(j,i+1)+matDst.at<uchar>(j,i-1)+matDst.at<uchar>(j+1,i)+matDst.at<uchar>(j-1,i)-4*matDst.at<uchar>(j,i);
-			matDst.at<uchar>(j,i)*=-1;
-			cout<<value<<endl;
-			//matDst.at<uchar>(j,i)=matDst.at<uchar>(j,i)+(matDst.at<uchar>(j,i+1)+matDst.at<uchar>(j,i-1)+matDst.at<uchar>(j+1,i)+matDst.at<uchar>(j-1,i)-4*matDst.at<uchar>(j,i));
+		/*	value=matSrc.at<uchar>(j,i+1)+matSrc.at<uchar>(j,i-1)+matSrc.at<uchar>(j+1,i)+matSrc.at<uchar>(j-1,i)-4*matSrc.at<uchar>(j,i);
 			if(value>0)
-				matDst.at<uchar>(j,i)=matDst.at<uchar>(j,i)+value;
-			else
-				matDst.at<uchar>(j,i)=matDst.at<uchar>(j,i)-value;
-		  }	
+				matDst.at<uchar>(j,i)=matSrc.at<uchar>(j,i)+value;
+			else if(value<0)
+				matDst.at<uchar>(j,i)=matSrc.at<uchar>(j,i)-value;
+		  	*/
 		/*	if(i==0&&j){
-				sum-=matDst.at<uchar>(j-1,i);
-				sum-=matDst.at<uchar>(j-1,i+1);
-				sum-=matDst.at<uchar>(j,i+1);
-				sum+=8*matDst.at<uchar>(j,i);
-				sum-=matDst.at<uchar>(j+1,i);
-				sum-=matDst.at<uchar>(j+1,i+1);
+				sum+=8*(int)matDst.at<uchar>(j,i);
+				sum-=(int)matDst.at<uchar>(j-1,i);
+				sum-=(int)matDst.at<uchar>(j-1,i+1);
+				sum-=(int)matDst.at<uchar>(j+1,i);
+				sum-=(int)matDst.at<uchar>(j+1,i);
+				sum-=(int)matDst.at<uchar>(j+1,i+1);
 				matDst.at<uchar>(j,i)=sum/6;
 				sum=0;
+
+
+
 			}
-			else if(i&&j==0){
-				sum-=matDst.at<uchar>(j,i-1);
-				sum+=8*matDst.at<uchar>(j,i);
-				sum-=matDst.at<uchar>(j,i+1);
-				sum-=matDst.at<uchar>(j+1,i-1);
-				sum-=matDst.at<uchar>(j+1,i);
-				sum-=matDst.at<uchar>(j+1,i+1);
+			if(i&&j==0){
+				sum+=8*(int)matDst.at<uchar>(j,i);
+				sum-=(int)matDst.at<uchar>(j,i-1);
+				sum-=(int)matDst.at<uchar>(j,i+1);
+				sum-=(int)matDst.at<uchar>(j+1,i-1);
+				sum-=(int)matDst.at<uchar>(j+1,i);
+				sum-=(int)matDst.at<uchar>(j+1,i+1);
 				matDst.at<uchar>(j,i)=sum/6;
 				sum=0;
+
 			}
-			else if(i==0&&j==0){
-				sum-=matDst.at<uchar>(j+1,i);
-				sum+=8*matDst.at<uchar>(j,i);
-				sum-=matDst.at<uchar>(j,i+1);
-				sum-=matDst.at<uchar>(j+1,i+1);
+			if(i==0&&j==0){
+				sum+=8*(int)matDst.at<uchar>(j,i);
+				sum-=(int)matDst.at<uchar>(j,i+1);
+				sum-=(int)matDst.at<uchar>(j+1,i);
+				sum-=(int)matDst.at<uchar>(j+1,i+1);
 				matDst.at<uchar>(j,i)=sum/4;
 				sum=0;
-			}
 				
-			
-			else{	*/
-		/*	for(int k=i-1;k<i+2;k++)
-				for(int z=j-1;z<j+2;z++){
-					if(z==j&&k==i)
-						sum+=8*matDst.at<uchar>(z,k);
+			}*/
 
-					else{
+
+
+
+			for(int k=i-1;k<i+2;k++)
+				for(int z=j-1;z<j+2;z++){
+					
+					if(z==j&&k==i)
+						sum+=7*matDst.at<uchar>(z,k);
+
+					else
 						sum-=matDst.at<uchar>(z,k);
 						
-					}
+					
 				
 				}
-			
 			matDst.at<uchar>(j,i)=sum/9;
 			sum=0;
+			//cout<<(int)matDst.at<uchar>(-100,-100)<<endl;
+			/*sum+=8*(int)matDst.at<uchar>(j,i);
+			sum-=(int)matDst.at<uchar>(j-1,i-1);
+			sum-=(int)matDst.at<uchar>(j-1,i);
+			sum-=(int)matDst.at<uchar>(j-1,i+1);
+			sum-=(int)matDst.at<uchar>(j,i-1);
+			sum-=(int)matDst.at<uchar>(j,i+1);
+			sum-=(int)matDst.at<uchar>(j+1,i-1);
+			sum-=(int)matDst.at<uchar>(j+1,i);
+			sum-=(int)matDst.at<uchar>(j+1,i+1);
+			//if(sum>0)
+			//	sum=-100000000;
+
+			matDst.at<uchar>(j,i)=sum/9;
+			sum=0;*/
 				
-		}*/
+		}
 	imshow("Result",matDst);
 	waitKey(0);
 }	
@@ -199,8 +217,9 @@ int main(){
 //	init("Fig0343(a)(skeleton_orig).tif");
 //	cout<<"input gamma value : ";
 //	cin>>gamma;
-//	init("Fig0343(a)(skeleton_orig).tif");
+//	init("Fig0338(a)(blurry_moon).tif");
 	init("Fig0343(a)(skeleton_orig).tif");
+	
 	powerLawTrans(1);
 //	histogram();
 //	smoothing_filt(25);
