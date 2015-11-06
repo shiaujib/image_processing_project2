@@ -6,14 +6,16 @@
 using namespace std;
 using namespace cv;
 
-Mat matSrc,matDst,matLs,matadd;
+Mat matSrc,matDst,matLs,matadd,matsdst,matldst;
 
 
 void init(String str){
 	matSrc=imread(str,0);
 	matDst=Mat(matSrc.size(),CV_8UC1);
+	matldst=Mat(matSrc.size(),0);
 	matLs=Mat(matSrc.size(),0);
-	matadd=Mat(matadd.size(),CV_8UC1);
+	matadd=Mat(matSrc.size(),CV_8UC1);
+	matsdst=Mat(matSrc.size(),CV_8UC1);
 	imshow("input",matSrc);
 	waitKey(0);
 	
@@ -48,7 +50,7 @@ void smoothing_filt(int n){
 			//if(i){
 			for(int k=i-1;k<i+n-1;k++)
 				for(int z=j-1;z<j+n-1;z++){
-					sum+=matDst.at<uchar>(z,k);
+					sum+=matSrc.at<uchar>(z,k);
 				}
 			//}
 			matDst.at<uchar>(j,i)=sum/(n*n);
@@ -62,31 +64,32 @@ void smoothing_filt(int n){
 void laplace(){
 	int value=0;
 	int sum=0;
-	for(int i=-1;i<matDst.cols;i++)
-		for(int j=-1;j<matDst.rows;j++){
+	for(int i=1;i<matDst.cols-1;i++)
+		for(int j=1;j<matDst.rows-1;j++){
 
 
-			for(int k=i-2;k<i+2;k++)
-				for(int z=j-2;z<j+2;z++){
+			for(int k=i-1;k<i+2;k++)
+				for(int z=j-1;z<j+2;z++){
 					
 					if(z==j&&k==i)
-						sum+=8*matDst.at<uchar>(z,k);
+						sum+=8*matSrc.at<uchar>(z,k);
 
 					else
-						sum-=matDst.at<uchar>(z,k);
+						sum-=matSrc.at<uchar>(z,k);
 						
 					
 				
 				}
-			/*if(sum>255)
+		/*	if(sum/9>255)
 				sum=255;
-			else if(sum<0)
+			else if(sum/9<0)
 				sum=0;*/
-			matDst.at<uchar>(j,i)=sum/9;
+		//	cout<<(int)sum<<endl;
+			matSrc.at<uchar>(j,i)=sum/9;
 			sum=0;
 				
 		}
-	imshow("Result",matDst);
+	imshow("Result",matSrc);
 	waitKey(0);
 }
 
@@ -121,6 +124,42 @@ void laplace_sharpening(){
 	waitKey(0);
 
 }
+
+
+void sobel_gradient(){
+	int sum1=0,sum2=0;
+	int value;
+	for(int i=1;i<matDst.cols-1;i++)
+		for(int j=1;j<matDst.rows-1;j++){
+			sum1+=matSrc.at<uchar>(j+1,i-1);
+			sum1+=2*matSrc.at<uchar>(j+1,i);
+			sum1+=matSrc.at<uchar>(j+1,i+1);
+			sum1-=matSrc.at<uchar>(j-1,i-1);
+			sum1-=2*matSrc.at<uchar>(j-1,i);
+			sum1-=matSrc.at<uchar>(j-1,i+1);
+			sum1=abs(sum1);
+			sum2+=matSrc.at<uchar>(j-1,i+1);
+			sum2+=2*matSrc.at<uchar>(j,i+1);
+			sum2+=matSrc.at<uchar>(j+1,i+1);
+			sum2-=matSrc.at<uchar>(j-1,i-1);
+			sum2-=2*matSrc.at<uchar>(j,i-1);
+			sum2-=matSrc.at<uchar>(j+1,i-1);
+			sum2=abs(sum2);
+			value=sum1+sum2;
+		/*	if(value>255)
+				value=255;
+			else if(value<0)
+				value=0;*/
+			matsdst.at<uchar>(j,i)=value;
+		}
+	imshow("sobel gradient",matsdst);
+	waitKey(0);
+}
+			
+					
+			
+
+	
 
 
 void histogram_equ(int hisarray[],int total){
@@ -202,9 +241,10 @@ int main(){
 	
 	powerLawTrans(1);
 //	histogram();
-//	smoothing_filt(25);
+//	smoothing_filt(49);
 	laplace();
-	laplace_sharpening();
+//	laplace_sharpening();
+     	sobel_gradient();
 //	add_sharpening();
 //	cout<<"input gamma value : ";
 //	cin>>gamma;
