@@ -6,7 +6,7 @@
 using namespace std;
 using namespace cv;
 
-Mat matSrc,matDst,matLs,matadd,matsdst,matldst,matsmooth,matgsmooth,matunsharp,matProduct,matLaplace,matresult,matHistogramEqu;
+Mat matSrc,matDst,matLs,matadd,matsdst,matldst,matsmooth,matgsmooth,matunsharp,matProduct,matLaplace,matresult,matHistogramEqu,matgsharp,matend;
 
 
 void init(String str){
@@ -23,6 +23,8 @@ void init(String str){
 	matLaplace=Mat(matSrc.size(),CV_8UC1);
 	matresult=Mat(matSrc.size(),CV_8UC1);
 	matHistogramEqu=Mat(matSrc.size(),CV_8UC1);
+	matgsharp=Mat(matSrc.size(),CV_8UC1);
+	matend=Mat(matSrc.size(),CV_8UC1);
 	imshow("input",matSrc);
 	waitKey(0);
 
@@ -67,7 +69,7 @@ void smoothing_filt(int n,Mat matIn,Mat matOut){
 			matOut.at<uchar>(j,i)=sum/(n*n);
 			sum=0;
 		}
-	imshow("smooth Result",matsmooth);
+	imshow("smooth Result",matOut);
 	waitKey(0);
 
 }	
@@ -139,23 +141,23 @@ void add_sharpening(){
 
 
 
-void laplace_sharpening(){
+void laplace_sharpening(Mat matin,Mat matout){
 	int value=0;
 	int sum=0;
 	int result1,result2;
 	for(int i=0;i<matDst.cols;i++)
 		for(int j=0;j<matDst.rows;j++){
-			value=matSrc.at<uchar>(j,i+1)+matSrc.at<uchar>(j,i-1)+matSrc.at<uchar>(j+1,i)+matSrc.at<uchar>(j-1,i)-4*matSrc.at<uchar>(j,i);
-			result1=matSrc.at<uchar>(j,i)-value;
+			value=matin.at<uchar>(j,i+1)+matin.at<uchar>(j,i-1)+matin.at<uchar>(j+1,i)+matin.at<uchar>(j-1,i)-4*matin.at<uchar>(j,i);
+			result1=matin.at<uchar>(j,i)-value;
 			if(result1>255)
 				result1=255;
 			else if(result1<0)
 				result1=0;
 
-			matLs.at<uchar>(j,i)=result1;
+			matout.at<uchar>(j,i)=result1;
 		
 		}
-	imshow("laplace sharp",matLs);
+	imshow("laplace sharp",matout);
 	waitKey(0);
 
 }
@@ -201,12 +203,13 @@ void sobel_gradient(Mat matSrc,Mat matsdst){
 }
 
 void unsharp(float k,Mat matIn,Mat matOut){
+	
 	smoothing_filt(5,matSrc,matsmooth);
 	int value;
 	for(int i=1;i<matDst.cols-1;i++)
 		for(int j=1;j<matDst.rows-1;j++){
 			
-			value=matIn.at<uchar>(j,i)+k*matsmooth.at<uchar>(j,i);
+			value=matIn.at<uchar>(j,i)+k*(matsmooth.at<uchar>(j,i));
 			if(value>255)
 				value=255;
 			else if(value<0)
@@ -335,8 +338,49 @@ void histogram(){
 	waitKey(0);
 	histogram_equ(hisarray,total,matSrc,matHistogramEqu);	
 }
+void skeleton(){
+	init("Fig0343(a)(skeleton_orig).tif");
+	//init("p2test.tif");
+	//powerLawTrans(1);
+	histogram();
+	smoothing_filt(5,matSrc,matsmooth);
+	laplace();
+	laplace_sharpening(matSrc,matLs);
+	add_sharpening();
+	sobel_gradient(matSrc,matsdst);
+	showImage("gradient image",matsdst);
+	smoothing_filt(5,matsdst,matgsmooth);
+	//sobel_gradient(matsmooth,matgsmooth);
+	showImage("gradient smooth image",matgsmooth);
+	laplace_sharpening(matgsmooth,matgsharp);
+	unsharp(1,matgsmooth,matunsharp);
+	showImage("unsharp",matunsharp);
+	//product(matLs,matgsmooth,matProduct);
+	laplace_sharpening(matunsharp,matgsharp);
+	powerLawTrans(0.75,matgsharp,matresult);
+	laplace_sharpening(matresult,matend);
+	
+
+}
+
+void test(){
+	init("p2test.tif");
+	laplace_sharpening(matSrc,matLs);
+	sobel_gradient(matLs,matsdst);
+	showImage("gradient image",matsdst);
+	smoothing_filt(5,matsdst,matgsmooth);
+	unsharp(1,matgsmooth,matunsharp);
+	powerLawTrans(0.6,matunsharp,matresult);
+	imwrite("testresult.tif",matresult);
+
+	
+	
 
 
+
+
+
+}
 
 
 int main(){
@@ -345,23 +389,27 @@ int main(){
 	//	cout<<"input gamma value : ";
 	//	cin>>gamma;
 //	init("Fig0316(2)(2nd_from_top).tif");
-	init("Fig0343(a)(skeleton_orig).tif");
-
+/*	init("Fig0343(a)(skeleton_orig).tif");
+	//init("p2test.tif");
 	//powerLawTrans(1);
 	histogram();
 	smoothing_filt(5,matSrc,matsmooth);
 	laplace();
-	laplace_sharpening();
+	laplace_sharpening(matSrc,matLs);
 	add_sharpening();
 	sobel_gradient(matSrc,matsdst);
 	showImage("gradient image",matsdst);
 	smoothing_filt(5,matsdst,matgsmooth);
 	//sobel_gradient(matsmooth,matgsmooth);
 	showImage("gradient smooth image",matgsmooth);
+	laplace_sharpening(matgsmooth,matgsharp);
 	unsharp(1,matgsmooth,matunsharp);
 	showImage("unsharp",matunsharp);
 	//product(matLs,matgsmooth,matProduct);
-	powerLawTrans(0.75,matunsharp,matresult);
+	laplace_sharpening(matunsharp,matgsharp);
+	powerLawTrans(0.75,matgsharp,matresult);
+	laplace_sharpening(matresult,matend);
+	showImage("end",matresult);*/
 
 	//	add_sharpening();
 	//	cout<<"input gamma value : ";
@@ -369,7 +417,8 @@ int main(){
 	//	init("Fig0343(a)(skeleton_orig).tif");
 	//powerLawTrans(gamma);
 	//	logTrans(5);
-
+	skeleton();
+	test();
 
 
 
