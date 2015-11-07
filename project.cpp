@@ -6,7 +6,7 @@
 using namespace std;
 using namespace cv;
 
-Mat matSrc,matDst,matLs,matadd,matsdst,matldst;
+Mat matSrc,matDst,matLs,matadd,matsdst,matldst,matsmooth,matgsmooth,matunsharp,matProduct,matLaplace,matresult,matHistogramEqu;
 
 
 void init(String str){
@@ -16,94 +16,128 @@ void init(String str){
 	matLs=Mat(matSrc.size(),0);
 	matadd=Mat(matSrc.size(),CV_8UC1);
 	matsdst=Mat(matSrc.size(),CV_8UC1);
+	matsmooth=Mat(matSrc.size(),CV_8UC1);
+	matgsmooth=Mat(matSrc.size(),CV_8UC1);
+	matunsharp=Mat(matSrc.size(),CV_8UC1);
+	matProduct=Mat(matSrc.size(),CV_8UC1);
+	matLaplace=Mat(matSrc.size(),CV_8UC1);
+	matresult=Mat(matSrc.size(),CV_8UC1);
+	matHistogramEqu=Mat(matSrc.size(),CV_8UC1);
 	imshow("input",matSrc);
 	waitKey(0);
-	
-	
+
+
+}
+void showImage(String str,Mat mat){
+	imshow(str,mat);
+	waitKey(0);
 }
 
-void powerLawTrans(float gamma){    //RGB type is uchar
+
+
+
+void powerLawTrans(float gamma,Mat matin,Mat matout){    //RGB type is uchar
 	for(int i=0;i<matDst.cols;i++)
 		for(int j=0;j<matDst.rows;j++){
-			matDst.at<uchar>(j,i)=255*std::pow(matSrc.at<uchar>(j,i)/255.0,gamma);
-			}
-	imshow("result",matDst);
+			matout.at<uchar>(j,i)=255*std::pow(matin.at<uchar>(j,i)/255.0,gamma);
+		}
+	imshow("powerLaw",matout);
 	waitKey(0);
 }
 void logTrans(float grayLevel){
 	for(int i=0;i<matDst.cols;i++)
 		for(int j=0;j<matDst.rows;j++){
 			matDst.at<uchar>(j,i)=(int)255*log(matSrc.at<uchar>(j,i)/255.0+grayLevel);
-			}
+		}
 	//cv::pow(matSrc,gamma,matDst);
 	imshow("result",matDst);
 	waitKey(0);
-	
+
 
 }
 
-void smoothing_filt(int n){
+void smoothing_filt(int n,Mat matIn,Mat matOut){
 	int sum=0;
-	n=sqrt(n);
-	for(int i=0;i<matDst.cols;i++)
-		for(int j=0;j<matDst.rows;j++){
-			//if(i){
+	for(int i=1;i<matDst.cols;i++)
+		for(int j=1;j<matDst.rows;j++){
 			for(int k=i-1;k<i+n-1;k++)
 				for(int z=j-1;z<j+n-1;z++){
-					sum+=matSrc.at<uchar>(z,k);
+					sum+=matIn.at<uchar>(z,k);
 				}
-			//}
-			matDst.at<uchar>(j,i)=sum/(n*n);
+			matOut.at<uchar>(j,i)=sum/(n*n);
 			sum=0;
 		}
-	imshow("Result",matDst);
+	imshow("smooth Result",matsmooth);
 	waitKey(0);
 
 }	
-			
+
 void laplace(){
 	int value=0;
-	int sum=0;
+	double sum=0;
+	double scale=0;
+	int max=0,min=0;
+	int index=0;
+	int sumarray[matDst.cols*matDst.rows];
 	for(int i=1;i<matDst.cols-1;i++)
 		for(int j=1;j<matDst.rows-1;j++){
 
-
 			for(int k=i-1;k<i+2;k++)
 				for(int z=j-1;z<j+2;z++){
-					
+
 					if(z==j&&k==i)
 						sum+=8*matSrc.at<uchar>(z,k);
 
 					else
 						sum-=matSrc.at<uchar>(z,k);
-						
-					
-				
+
+
 				}
-		/*	if(sum/9>255)
+			if(sum>max)
+				max=sum;
+			if(sum<min)
+				min=sum;
+			if(sum>255)
 				sum=255;
-			else if(sum/9<0)
-				sum=0;*/
-		//	cout<<(int)sum<<endl;
-			matSrc.at<uchar>(j,i)=sum/9;
+			else if(sum<0)
+				sum=0;
+			matLaplace.at<uchar>(j,i)=sum;
+
+			sumarray[index++]=sum;
+
+			scale=0;
 			sum=0;
-				
+
 		}
-	imshow("Result",matSrc);
+	index=0;
+	for(int i=1;i<matDst.cols-1;i++)
+		for(int j=1;j<matDst.rows-1;j++){
+			scale=(sumarray[index++]-min)*255/(max-min);	
+			matDst.at<uchar>(j,i)=scale;
+		}
+
+
+	cout<<max<<endl<<min<<endl;
+	imshow("Result",matDst);
 	waitKey(0);
 }
 
 void add_sharpening(){
+	int sum;
 	for(int i=0;i<matDst.cols;i++)
 		for(int j=0;j<matDst.rows;j++){
-			matadd.at<uchar>(j,i)=matLs.at<uchar>(j,i)+matDst.at<uchar>(j,i);
+			sum=matLaplace.at<uchar>(j,i)+matSrc.at<uchar>(j,i);
+			if(sum>255)
+				sum=255;
+			else if(sum<0)
+				sum=0;
+			matadd.at<uchar>(j,i)=sum;
 		}
 	imshow("add result",matadd);
-	waitKey(0);
 }
-			
-	
-			
+
+
+
 
 void laplace_sharpening(){
 	int value=0;
@@ -119,6 +153,7 @@ void laplace_sharpening(){
 				result1=0;
 
 			matLs.at<uchar>(j,i)=result1;
+		
 		}
 	imshow("laplace sharp",matLs);
 	waitKey(0);
@@ -126,9 +161,12 @@ void laplace_sharpening(){
 }
 
 
-void sobel_gradient(){
+void sobel_gradient(Mat matSrc,Mat matsdst){
 	int sum1=0,sum2=0;
 	int value;
+	int scale=0;
+	int min=0, max=0;
+	int index=0;
 	for(int i=1;i<matDst.cols-1;i++)
 		for(int j=1;j<matDst.rows-1;j++){
 			sum1+=matSrc.at<uchar>(j+1,i-1);
@@ -146,111 +184,191 @@ void sobel_gradient(){
 			sum2-=matSrc.at<uchar>(j+1,i-1);
 			sum2=abs(sum2);
 			value=sum1+sum2;
-		/*	if(value>255)
+			sum1=0;
+			sum2=0;
+			if(value>255)
 				value=255;
 			else if(value<0)
-				value=0;*/
+				value=0;
+
 			matsdst.at<uchar>(j,i)=value;
 		}
-	imshow("sobel gradient",matsdst);
-	waitKey(0);
-}
-			
-					
-			
+	index=0;
 
+
+
+
+}
+
+void unsharp(float k,Mat matIn,Mat matOut){
+	smoothing_filt(5,matSrc,matsmooth);
+	int value;
+	for(int i=1;i<matDst.cols-1;i++)
+		for(int j=1;j<matDst.rows-1;j++){
+			
+			value=matIn.at<uchar>(j,i)+k*matsmooth.at<uchar>(j,i);
+			if(value>255)
+				value=255;
+			else if(value<0)
+				value=0;
+			matOut.at<uchar>(j,i)=value;
+		}
+
+}
+
+
+void product(Mat mat1,Mat mat2,Mat matOut){
+	int value=0;
+	int index;
+	/*for(int i=0;i<matDst.rows;i++){
+		for(int j=0;j<matDst.cols;j++){
+			for(int k=0;k<matDst.rows;k++){
+				value+=mat2.at<uchar>(k,j)*mat1.at<uchar>(i,k);
+			}
+			matOut.at<uchar>(i,j)=value;
+			value=0;
+		}
+	}*/
+	matOut=mat1.mul(mat2);
+/*	mat1.convertTo(mat1,CV_32F);
+	mat2.convertTo(mat2,CV_32F);
+	gemm(mat1,mat2,1,new Mat(),0,matOut,0);*/
+	
+	
+
+	showImage("product",matOut);
+
+	}
+	
 	
 
 
-void histogram_equ(int hisarray[],int total){
+
+
+
+
+
+void histogram_equ(int hisarray[],int total,Mat matin,Mat matout){
+	Mat figure=Mat(Size(400,300),CV_8UC3);
 	double pr[256]={0.0};
 	double ps[256]={0.0};
+	int hisEquArray[256]={0};
 	double temp;
 	int s[256]={0};
 	int value;
+	int max=0;
 	for(int i=0;i<256;i++){     //claculate probability
 		pr[i]=(double)hisarray[i]/total;
 		temp+=pr[i];
 		s[i]=cvRound(temp*255); //(L-1)*pr
-		cout<<s[i]<<endl;
+		//	cout<<s[i]<<endl;
 		//cout<<hisarray[i]<<endl;
 		ps[s[i]]+=pr[i];
 
 	}
-	for(int i=0;i<matSrc.cols;i++)
-		for(int j=0;j<matSrc.rows;j++){
-			value=(int)matSrc.at<uchar>(j,i);
+	for(int i=0;i<matin.cols;i++)
+		for(int j=0;j<matin.rows;j++){
+			value=(int)matin.at<uchar>(j,i);
 			value=s[value];
-			matDst.at<uchar>(j,i)=value;
-			}
-	imshow("histogram equalize",matDst);
-	waitKey(0);
-			//for(int k=0;k<256;k++){
-			//	if(value==s[i])
-			
+			matout.at<uchar>(j,i)=value;
+		}
 	
-				
+	for(int i=0;i<matin.cols;i++)
+		for(int j=0;j<matin.rows;j++){
 			
+			hisEquArray[(int)matout.at<uchar>(j,i)]++;
+
+		}
+	for(int i=0;i<256;i++){
+		if(hisEquArray[i]>max)
+			max=hisEquArray[i];
+		//		cout<<hisarray[i]<<endl;
+	}
+	//cout<<"max "<<max<<endl;
+	int intensity;
+	int scale=2;
+	double bwidth=(double)figure.cols/256;
+	double bheight=(double)figure.rows/max;
+	for(int i=0;i<256;i++){
+		rectangle(figure,Point(i*bwidth,figure.rows),Point((i+1)*bwidth,figure.rows-hisEquArray[i]*bheight),  Scalar(0,255),-1,8,0);
+
+	}
+	imshow("histogram equalize graph",figure);
+	waitKey(0);
+	imshow("histogram equalize",matout);
+	waitKey(0);
+
+
+
+
 }
 void histogram(){
 	int total=0,max=0;
 	int hisarray[256]={0};
 	Mat figure=Mat(Size(400,300),CV_8UC3);
-	
+
 	for(int i=0;i<matSrc.cols;i++)
 		for(int j=0;j<matSrc.rows;j++){
 			total++;
 			hisarray[(int)matSrc.at<uchar>(j,i)]++;
-			
-			
-			}
-	
-	
+
+
+		}
+
+
 	for(int i=0;i<256;i++){
 		if(hisarray[i]>max)
 			max=hisarray[i];
-//		cout<<hisarray[i]<<endl;
-		}
+		//		cout<<hisarray[i]<<endl;
+	}
 	cout<<"max "<<max<<endl;
 	int intensity;
 	int scale=2;
 	double bwidth=(double)figure.cols/256;
 	double bheight=(double)figure.rows/max;
-//	cout<<"   bbb"<<bwidth<<endl;
+	//	cout<<"   bbb"<<bwidth<<endl;
 	for(int i=0;i<256;i++){
-//		intensity=100*cvRound(hisarray[i]*255/max);
-	//	rectangle(figure,Point(i*scale,255),Point((i+1)*scale,255-intensity),  CV_RGB(255,255,255));
 		rectangle(figure,Point(i*bwidth,figure.rows),Point((i+1)*bwidth,figure.rows-hisarray[i]*bheight),  Scalar(0,255),-1,8,0);
-		
-		}
-	imshow("graph",figure);
+
+	}
+	imshow("histogram graph",figure);
 	waitKey(0);
-	histogram_equ(hisarray,total);	
+	histogram_equ(hisarray,total,matSrc,matHistogramEqu);	
 }
 
-	
+
 
 
 int main(){
 	float gamma;
-//	init("Fig0343(a)(skeleton_orig).tif");
-//	cout<<"input gamma value : ";
-//	cin>>gamma;
-//	init("Fig0338(a)(blurry_moon).tif");
+	//	init("Fig0343(a)(skeleton_orig).tif");
+	//	cout<<"input gamma value : ";
+	//	cin>>gamma;
+//	init("Fig0316(2)(2nd_from_top).tif");
 	init("Fig0343(a)(skeleton_orig).tif");
-	
-	powerLawTrans(1);
-//	histogram();
-//	smoothing_filt(49);
+
+	//powerLawTrans(1);
+	histogram();
+	smoothing_filt(5,matSrc,matsmooth);
 	laplace();
-//	laplace_sharpening();
-     	sobel_gradient();
-//	add_sharpening();
-//	cout<<"input gamma value : ";
-//	cin>>gamma;
-//	init("Fig0343(a)(skeleton_orig).tif");
+	laplace_sharpening();
+	add_sharpening();
+	sobel_gradient(matSrc,matsdst);
+	showImage("gradient image",matsdst);
+	smoothing_filt(5,matsdst,matgsmooth);
+	//sobel_gradient(matsmooth,matgsmooth);
+	showImage("gradient smooth image",matgsmooth);
+	unsharp(1,matgsmooth,matunsharp);
+	showImage("unsharp",matunsharp);
+	//product(matLs,matgsmooth,matProduct);
+	powerLawTrans(0.75,matunsharp,matresult);
+
+	//	add_sharpening();
+	//	cout<<"input gamma value : ";
+	//	cin>>gamma;
+	//	init("Fig0343(a)(skeleton_orig).tif");
 	//powerLawTrans(gamma);
-//	logTrans(5);
+	//	logTrans(5);
 
 
 
