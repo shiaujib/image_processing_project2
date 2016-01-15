@@ -6,7 +6,7 @@
 using namespace std;
 using namespace cv;
 
-Mat matSrc,matDst,matLs,matadd,matsdst,matldst,matsmooth,matgsmooth,matunsharp,matProduct,matLaplace,matresult,matHistogramEqu,matgsharp,matend,matPro,matPron,mataddFst,mataddSnd;
+Mat matSrc,matDst,matLs,matadd,matsdst,matldst,matsmooth,matgsmooth,matunsharp,matProduct,matLaplace,matresult,matHistogramEqu,matgsharp,matend;
 
 
 void init(String str){
@@ -25,10 +25,6 @@ void init(String str){
 	matHistogramEqu=Mat(matSrc.size(),CV_8UC1);
 	matgsharp=Mat(matSrc.size(),CV_8UC1);
 	matend=Mat(matSrc.size(),CV_8UC1);
-	matPro=Mat(matSrc.size(),CV_64FC1);
-	matPron=Mat(matSrc.size(),CV_8UC1);
-	mataddFst=Mat(matSrc.size(),CV_8UC1);
-	mataddSnd=Mat(matSrc.size(),CV_8UC1);
 	imshow("input",matSrc);
 	waitKey(0);
 
@@ -41,66 +37,14 @@ void showImage(String str,Mat mat){
 
 
 
-void productMatrix(Mat mata, Mat matb,Mat matout,int flag){
-	int cols=mata.cols;
-	int rows=mata.rows;
-	double sum;
-	if(flag==0){
-	for(int i=0;i<cols;i++){
-		for(int j=0;j<rows;j++){
-			for(int k=0;k<cols;k++){
-				sum+=mata.at<uchar>(i,k)*matb.at<uchar>(k,j);
-			}
-			matout.at<uchar>(i,j)=sum;
-			sum=0;
-		}
-	}
-	}
-	if(flag==1){
-	for(int i=0;i<cols;i++){
-		for(int j=0;j<rows;j++){
-			for(int k=0;k<cols;k++){
-				sum+=mata.at<double>(i,k)*matb.at<double>(k,j);
-			}
-			matout.at<double>(i,j)=sum;
-			sum=0;
-		}
-	}
-	}
-}
-
-void normalize(Mat matin,Mat matout){
-	int cols=matin.cols;
-	int rows=matin.rows;
-	double max=0,min=1000,value,scale;
-	for(int i=0;i<cols;i++){
-		for(int j=0;j<rows;j++){
-			value=matin.at<double>(j,i);
-			//cout<<value<<endl;
-			if(value>max)
-				max=value;
-			if(value<min)
-				min=value;
-			}
-	}
-	for(int i=0;i<cols;i++){
-		for(int j=0;j<rows;j++){
-			scale=(matin.at<double>(j,i)-min)*255.0/(max-min);
-			matout.at<uchar>(j,i)=scale;
-		}
-	}
-	cout<<"max="<<max<<endl;
-	cout<<"min="<<min<<endl;
-}
-
 
 void powerLawTrans(float gamma,Mat matin,Mat matout){    //RGB type is uchar
 	for(int i=0;i<matDst.cols;i++)
 		for(int j=0;j<matDst.rows;j++){
 			matout.at<uchar>(j,i)=255*std::pow(matin.at<uchar>(j,i)/255.0,gamma);
 		}
-//	imshow("powerLaw",matout);
-//	waitKey(0);
+	imshow("powerLaw",matout);
+	waitKey(0);
 }
 void logTrans(float grayLevel){
 	for(int i=0;i<matDst.cols;i++)
@@ -180,17 +124,18 @@ void laplace(){
 	waitKey(0);
 }
 
-void add_sharpening(Mat mat1,Mat mat2,Mat matout){
+void add_sharpening(){
 	int sum;
 	for(int i=0;i<matDst.cols;i++)
 		for(int j=0;j<matDst.rows;j++){
-			sum=mat1.at<uchar>(j,i)+mat2.at<uchar>(j,i);
+			sum=matLaplace.at<uchar>(j,i)+matSrc.at<uchar>(j,i);
 			if(sum>255)
 				sum=255;
 			else if(sum<0)
 				sum=0;
-			matout.at<uchar>(j,i)=sum;
+			matadd.at<uchar>(j,i)=sum;
 		}
+	imshow("add result",matadd);
 }
 
 
@@ -278,16 +223,27 @@ void unsharp(float k,Mat matIn,Mat matOut){
 void product(Mat mat1,Mat mat2,Mat matOut){
 	int value=0;
 	int index;
-	int cols=mat1.cols;
-	int rows=mat1.rows;
-	for(int i=0;i<cols;i++)
-		for(int j=0;j<rows;j++){
-			matOut.at<double>(j,i)=mat1.at<uchar>(j,i)*mat2.at<uchar>(j,i);
+	/*for(int i=0;i<matDst.rows;i++){
+		for(int j=0;j<matDst.cols;j++){
+			for(int k=0;k<matDst.rows;k++){
+				value+=mat2.at<uchar>(k,j)*mat1.at<uchar>(i,k);
+			}
+			matOut.at<uchar>(i,j)=value;
+			value=0;
+		}
+	}*/
+	matOut=mat1.mul(mat2);
+/*	mat1.convertTo(mat1,CV_32F);
+	mat2.convertTo(mat2,CV_32F);
+	gemm(mat1,mat2,1,new Mat(),0,matOut,0);*/
+	
+	
+
+	showImage("product",matOut);
 
 	}
-	normalize(matOut,matPron);
 	
-}	
+	
 
 
 
@@ -390,25 +346,19 @@ void skeleton(){
 	smoothing_filt(5,matSrc,matsmooth);
 	laplace();
 	laplace_sharpening(matSrc,matLs);
-	add_sharpening(matSrc,matDst,mataddFst);
+	add_sharpening();
 	sobel_gradient(matSrc,matsdst);
 	showImage("gradient image",matsdst);
-	//productMatrix(matLs,matsdst,matPron,0);
-	//normalize(matPro,matPron);
-	product(matLs,matsdst,matPro);
-	showImage("Product image",matPron);
-	add_sharpening(matSrc,matPron,mataddSnd);
-	showImage("add second",mataddSnd);
-	powerLawTrans(0.58,mataddSnd,matresult);
-	showImage("result",matresult);
-	/*smoothing_filt(5,matsdst,matgsmooth);
+	smoothing_filt(5,matsdst,matgsmooth);
+	//sobel_gradient(matsmooth,matgsmooth);
 	showImage("gradient smooth image",matgsmooth);
 	laplace_sharpening(matgsmooth,matgsharp);
 	unsharp(1,matgsmooth,matunsharp);
 	showImage("unsharp",matunsharp);
+	//product(matLs,matgsmooth,matProduct);
 	laplace_sharpening(matunsharp,matgsharp);
 	powerLawTrans(0.75,matgsharp,matresult);
-	laplace_sharpening(matresult,matend);*/
+	laplace_sharpening(matresult,matend);
 	//imshow("end",matresult);
 	//waitKey('0');
 	
@@ -469,8 +419,8 @@ int main(){
 	//	init("Fig0343(a)(skeleton_orig).tif");
 	//powerLawTrans(gamma);
 	//	logTrans(5);
-	skeleton();
-//	test();
+//	skeleton();
+	test();
 
 
 
